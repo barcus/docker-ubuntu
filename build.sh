@@ -14,6 +14,8 @@
 # OTHER  TORTIOUS ACTION,  ARISING  OUT OF  OR  IN CONNECTION  WITH  THE USE  OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+PATH='/usr/sbin:/usr/bin:/sbin:/bin'
+
 arch='amd64'
 version='1.0'
 
