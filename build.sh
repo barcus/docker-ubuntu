@@ -17,19 +17,6 @@
 arch='amd64'
 version='1.0'
 
-
-if [ ! -x "$(command -v sudo)" ]
-then
-    echo "Please install sudo (see README.md)"
-    exit 1
-fi
-
-if [ ! -x "$(command -v debootstrap)" ]
-then
-    echo "Please install debootstrap (see README.md)"
-    exit 1
-fi
-
 function usage()
 {
     cat <<EOF
@@ -312,6 +299,18 @@ do
 	    ;;
     esac
 done
+
+if [ ! -x "$(command -v sudo)" ]
+then
+    echo "Please install sudo (see README.md)"
+    exit 1
+fi
+
+if [ ! -x "$(command -v debootstrap)" ]
+then
+    echo "Please install debootstrap (see README.md)"
+    exit 1
+fi
 
 # -d / --dist
 if [ -n "${dist}" ]
