@@ -161,7 +161,7 @@ Dpkg::Options {
 EOF
 
     # create /etc/apt/apt.conf.d/disable-languages
-    # tahnks to https://github.com/docker/docker/blob/master/contrib/mkimage-debootstrap.sh
+    # thanks to https://github.com/docker/docker/blob/master/contrib/mkimage-debootstrap.sh
     echo ' * /etc/apt/apt.conf.d/disable-languages'
     cat <<EOF | ${sudo} tee "${image}/etc/apt/apt.conf.d/disable-languages" > /dev/null
 Acquire::Languages "none";
