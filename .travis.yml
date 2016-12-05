@@ -1,0 +1,12 @@
+language: bash
+sudo: false
+
+addons:
+  apt:
+    sources:
+      - debian-sid
+    packages:
+      - shellcheck
+
+script:
+  - shellcheck -e 2034 docker-debian.sh
