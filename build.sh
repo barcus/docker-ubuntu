@@ -34,7 +34,7 @@ OPTIONS:
    -d, --dist		Choose Ubuntu distribution (precise, trusty, xenial, yakkety)
    -m, --mirror		Choose your preferred mirror (default: archive.ubuntu.com)
    -t, --timezone       Choose your preferred timezone (default: Europe/Amsterdam)
-   -u, --user		Docker Hub username (or organisation)
+   -u, --user		Docker Hub username or organisation (default: $USER) 
    -p, --push		Docker Hub push
    -l, --latest         Force the "latest" (default: yakkety)
    -v, --version        Show version
