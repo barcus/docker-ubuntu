@@ -15,10 +15,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 arch='amd64'
-oldstable='wheezy'
-stable='jessie'
-testing='stretch'
-version='3.0'
+version='1.0'
 
 
 if [ ! -x "$(command -v sudo)" ]
@@ -38,34 +35,36 @@ function usage()
     cat <<EOF
 
 NAME:
-   build.sh - Docker images and builders of Debian.
+   build.sh - Docker images' builder of Ubuntu.
 
 USAGE:
    build.sh -d <dist>
 
 OPTIONS:
    -h, --help           Show help
-   -d, --dist		Choose debian distribution (lenny, squeeze, wheezy, jessie, stretch, sid)
-   -m, --mirror		Choose your preferred mirror (default: ftp.debian.org)
+   -d, --dist		Choose Ubuntu distribution (precise, trusty, xenial, yakkety)
+   -m, --mirror		Choose your preferred mirror (default: archive.ubuntu.com)
    -t, --timezone       Choose your preferred timezone (default: Europe/Amsterdam)
    -u, --user		Docker Hub username (or organisation)
    -p, --push		Docker Hub push
-   -l, --latest         Force the "latest" (default: jessie)
+   -l, --latest         Force the "latest" (default: yakkety)
    -v, --version        Show version
 
 VERSION:
    docker-debian version: ${version}
 
 EOF
-} # usage
+}
 
 function docker_debootstrap()
 {
     # variables
     image="/tmp/image-${distname}-${arch}"
     include="apt-transport-https,apt-utils,ca-certificates,curl,git,locales"
-    exclude="debconf-i18n,dmsetup,git-man,info,man-db,manpages"
-    components='main contrib non-free'
+    exclude="debconf-i18n,dmsetup,git-man,info,initramfs-tools,man-db,manpages"
+    components='main multiverse restricted universe'
+
+    echo "-- bootstrap ${distname}"
 
     if [ "$(id -u)" -ne 0 ]
     then
@@ -76,7 +75,7 @@ function docker_debootstrap()
     ${sudo} rm -fr "${image}"
 
     # create minimal debootstrap image
-    echo "-- debootstrap ${distname}"
+    echo " * debootstrap"
     ${sudo} debootstrap \
 	    --arch="${arch}" \
 	    --include="${include}" \
@@ -84,7 +83,7 @@ function docker_debootstrap()
 	    --variant=minbase \
 	    "${distname}" \
 	    "${image}" \
-	    "http://${mirror}/debian" > /dev/null
+	    "http://${mirror}/ubuntu" > /dev/null
 
     # create /etc/default/locale
     echo ' * /etc/default/locale'
@@ -108,73 +107,36 @@ nameserver 8.8.4.4
 nameserver 8.8.8.8
 EOF
 
-    if [ "${distname}" = 'lenny' ]
-    then
-
-	# create /etc/apt/sources.list
-	echo ' * /etc/apt/sources.list'
-	cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list" > /dev/null
-deb http://archive.debian.org/debian lenny main contrib non-free
-deb http://archive.debian.org/debian-backports lenny-backports main contrib non-free
+    # create /etc/apt/sources.list
+    echo ' * /etc/apt/sources.list'
+    cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list" > /dev/null
+deb http://${mirror}/ubuntu ${distname} ${components}
+deb http://${mirror}/ubuntu ${distname}-updates ${components}
 EOF
 
-	# create /etc/apt/apt.conf.d/90ignore-release-date
-	# thanks to http://stackoverflow.com/questions/36080756/archive-repository-for-debian-squeeze
-	echo ' * /etc/apt/apt.conf.d/ignore-release-date'
-	cat <<EOF | ${sudo} tee "${image}/etc/apt/apt.conf.d/ignore-release-date" > /dev/null
-Acquire::Check-Valid-Until "false";
+    # create /etc/apt/sources.list.d/backports.list
+    echo ' * /etc/apt/sources.list.d/backports.list'
+    cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list.d/backports.list" > /dev/null
+deb http://${mirror}/ubuntu ${distname}-backports ${components}
 EOF
 
-    elif [ "${distname}" = 'squeeze' ]
-    then
-
-	# create /etc/apt/sources.list
-	echo ' * /etc/apt/sources.list'
-	cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list" > /dev/null
-deb http://archive.debian.org/debian squeeze main contrib non-free
-deb http://archive.debian.org/debian squeeze-lts main contrib non-free
-deb http://archive.debian.org/debian-backports squeeze-backports main contrib non-free
-deb http://archive.debian.org/debian-backports squeeze-backports-sloppy main contrib non-free
+    # create /etc/apt/sources.list.d/security.list
+    echo ' * /etc/apt/sources.list.d/security.list'
+    cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list.d/security.list"  > /dev/null
+deb http://security.ubuntu.com/ubuntu ${distname}-security ${components}
 EOF
 
-	# create /etc/apt/apt.conf.d/90ignore-release-date
-	# thanks to http://stackoverflow.com/questions/36080756/archive-repository-for-debian-squeeze
-	echo ' * /etc/apt/apt.conf.d/ignore-release-date'
-	cat <<EOF | ${sudo} tee "${image}/etc/apt/apt.conf.d/ignore-release-date" > /dev/null
-Acquire::Check-Valid-Until "false";
-EOF
-
-    else
-
-	# create /etc/apt/sources.list
-	echo ' * /etc/apt/sources.list'
-	cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list" > /dev/null
-deb http://${mirror}/debian ${distname} ${components}
-deb http://${mirror}/debian ${distname}-updates ${components}
-EOF
-
-	# create /etc/apt/sources.list.d/backports.list
-	echo ' * /etc/apt/sources.list.d/backports.list'
-	cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list.d/backports.list" > /dev/null
-deb http://${mirror}/debian ${distname}-backports ${components}
-EOF
-
-	# create /etc/apt/sources.list.d/security.list
-	echo ' * /etc/apt/sources.list.d/security.list'
-	cat <<EOF | ${sudo} tee "${image}/etc/apt/sources.list.d/security.list"  > /dev/null
-deb http://security.debian.org/ ${distname}/updates ${components}
-EOF
-
-	# create /etc/dpkg/dpkg.cfg.d/disable-doc
-	# thanks to http://askubuntu.com/questions/129566/remove-documentation-to-save-hard-drive-space
-	cat <<EOF | ${sudo} tee "${image}/etc/dpkg/dpkg.cfg.d/disable-doc" > /dev/null
+    # create /etc/dpkg/dpkg.cfg.d/disable-doc
+    # thanks to http://askubuntu.com/questions/129566/remove-documentation-to-save-hard-drive-space
+    cat <<EOF | ${sudo} tee "${image}/etc/dpkg/dpkg.cfg.d/disable-doc" > /dev/null
 path-exclude /usr/share/doc/*
 path-include /usr/share/doc/*/copyright
-path-exclude /usr/share/info/*
 path-exclude /usr/share/man/*
+path-exclude /usr/share/groff/*
+path-exclude /usr/share/info/*
+path-exclude /usr/share/lintian/*
+path-exclude /usr/share/linda/*
 EOF
-
-    fi
 
     # create /etc/apt/apt.conf.d/force-ipv4
     # thanks to https://github.com/cw-ansible/cw.apt/
@@ -221,21 +183,7 @@ EOF
     cat <<EOF | ${sudo} tee "${image}/usr/bin/apt-clean" > /dev/null
 #!/bin/bash
 
-# Copyright (c) 2016, rockyluke
-#
-# Permission  to use,  copy, modify,  and/or  distribute this  software for  any
-# purpose  with  or without  fee  is hereby  granted,  provided  that the  above
-# copyright notice and this permission notice appear in all copies.
-#
-# THE SOFTWARE IS PROVIDED "AS IS"  AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-# REGARD TO  THIS SOFTWARE INCLUDING  ALL IMPLIED WARRANTIES  OF MERCHANTABILITY
-# AND FITNESS.  IN NO EVENT SHALL  THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-# INDIRECT, OR  CONSEQUENTIAL DAMAGES OR  ANY DAMAGES WHATSOEVER  RESULTING FROM
-# LOSS OF USE, DATA OR PROFITS,  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-# OTHER  TORTIOUS ACTION,  ARISING  OUT OF  OR  IN CONNECTION  WITH  THE USE  OR
-# PERFORMANCE OF THIS SOFTWARE.
-
-# Please read https://wiki.debian.org/ReduceDebian
+# Please read https://wiki.ubuntu.com/ReducingDiskFootprint
 
 find /usr/share/doc     -type f ! -name copyright -delete
 find /usr/share/i18n    -type f -delete
@@ -243,8 +191,19 @@ find /usr/share/locale  -type f -delete
 find /usr/share/man     -type f -delete
 find /var/cache/apt     -type f -delete
 find /var/lib/apt/lists -type f -delete
+# EOF
 EOF
     ${sudo} chmod 755 "${image}/usr/bin/apt-clean"
+
+    # create /usr/sbin/policy-rc.d
+    echo ' * /usr/sbin/policy-rc.d'
+    cat <<EOF | ${sudo} tee "${image}/usr/sbin/policy-rc.d" > /dev/null
+#!/bin/bash
+
+exit 101
+# EOF
+EOF
+    ${sudo} chmod 755 "${image}/usr/sbin/policy-rc.d"
 
     # mount
     ${sudo} mount --bind /dev     "${image}/dev"
@@ -267,7 +226,7 @@ EOF
              apt-get dist-upgrade -qq -y && \
              apt-get clean -qq -y && \
              apt-get autoremove -qq -y && \
-             apt-get autoclean -qq -y" > /dev/null
+             apt-get autoclean -qq -y"
 
     # unmount
     ${sudo} umount "${image}/dev/pts"
@@ -289,47 +248,26 @@ EOF
 	${sudo} rm "${image}.tar"
     fi
     ${sudo} tar --numeric-owner -cf "${image}.tar" -C "${image}" .
-} # docker_debootstrap
+}
 
+# create image from bootstrap archive
 function docker_import()
 {
-    # create image
-    echo "-- docker import debian:${distname} (from ${image}.tgz)"
-    docker import "${image}.tar" "${user}/debian:${distname}"
-    docker run "${user}/debian:${distname}" echo "Successfully build ${user}/debian:${distname}"
-    docker tag "${user}/debian:${distname}" "${user}/debian:${distid}"
-    docker run "${user}/debian:${distid}" echo "Successfully build ${user}/debian:${distid}"
+    echo "-- docker import ubuntu:${distname} (from ${image}.tgz)"
+    docker import "${image}.tar" "${user}/ubuntu:${distname}"
+    docker run "${user}/ubuntu:${distname}" echo "Successfully build ${user}/ubuntu:${distname}"
+    docker tag "${user}/ubuntu:${distname}" "${user}/ubuntu:${distid}"
+    docker run "${user}/ubuntu:${distid}" echo "Successfully build ${user}/ubuntu:${distid}"
+}
 
-    # tag {latest,stable,oldstable}
-    for import in latest oldstable stable testing
-    do
-	if [ "${distname}" = "${!import}" ]
-	then
-	    docker tag "${user}/debian:${distname}" "${user}/debian:${import}"
-	    docker run "${user}/debian:${distid}" echo "Successfully build ${user}/debian:${import}"
-	fi
-    done
-} # docker_import
-
+# push image to docker hub
 function docker_push()
 {
-    # push image
-    echo "-- docker push debian:${distname}"
-    docker push "${user}/debian:${distname}"
-
-    echo "-- docker push debian:${distid}"
-    docker push "${user}/debian:${distid}"
-
-    # push {latest,stable,oldstable}
-    for push in latest oldstable stable testing
-    do
-	if [ "${distname}" = "${!push}"  ]
-	then
-	    echo "-- docker push ${push}"
-	    docker push "${user}/debian:${push}"
-	fi
-    done
-} # docker_push
+    echo "-- docker push ubuntu:${distname}"
+    docker push "${user}/ubuntu:${distname}"
+    echo "-- docker push ubuntu:${distid}"
+    docker push "${user}/ubuntu:${distid}"
+}
 
 while getopts 'hd:m:t:u:plv' OPTIONS
 do
@@ -379,31 +317,13 @@ done
 if [ -n "${dist}" ]
 then
     case ${dist} in
-	lenny|5|5.0)
-	    distname='lenny'
-	    distid='5'
-	    mirror='archive.debian.org'
+	precise|12.04)
+	    distname='precise'
+	    distid='12.04'
 	    ;;
-	squeeze|6|6.0)
-	    distname='squeeze'
-	    distid='6'
-	    mirror='archive.debian.org'
-	    ;;
-	wheezy|7|7.0)
-	    distname='wheezy'
-	    distid='7'
-	    ;;
-	jessie|8|8.0)
-	    distname='jessie'
-	    distid='8'
-	    ;;
-	stretch|9|9.0)
-	    distname='stretch'
-	    distid='9'
-	    ;;
-	sid)
-	    distname='sid'
-	    distid='sid'
+	trusty|14.04)
+	    distname='trusty'
+	    distid='14.04'
 	    ;;
 	*)
 	    usage
@@ -418,7 +338,7 @@ fi
 # -m / --mirror
 if [ -z "${mirror}" ]
 then
-    mirror='ftp.debian.org'
+    mirror='archive.ubuntu.com'
 fi
 
 # -t / --timezone
@@ -436,16 +356,12 @@ fi
 # -l / --latest
 if [ -z "${latest}" ]
 then
-    latest='jessie'
+    latest='yakkety'
 fi
 
-# create image
 docker_debootstrap
-
-# import image
 docker_import
 
-# push image
 if [ -n "${push}" ]
 then
     docker_push

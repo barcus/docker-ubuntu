@@ -1,11 +1,12 @@
-# docker-debian ![License badge][license-img] [![Build Status][build-img]][build-url] [![Docker badge][docker-img]][docker-url]
+# docker-ubuntu ![License badge][license-img] [![Build Status][build-img]][build-url] [![Docker badge][docker-img]][docker-url]
 
 ## Overview
 
-Debian is a free operating system (OS) for your computer. An operating system is
-the set of basic programs and utilities that make your computer run.
+Ubuntu  is a  Debian-based free  operating system  (OS) for  your computer.   An
+operating  system is  the set  of basic  programs and  utilities that  make your
+computer run.
 
-https://www.debian.org/
+https://www.ubuntu.com/
 
 ## Description
 
@@ -18,25 +19,23 @@ all of our images are accurates.
 
 Supported tags.
 
-- 5, lenny
-- 6, squeeze
-- 7, wheezy, oldstable
-- 8, jessie, stable, latest
-- 9, stretch, testing
-- sid
+- 12.04, precise
+- 14.04, trusty
+- 16.04, xenial
+- 16.10, yakkety
 
 ## Requirements
 
 On Debian you need sudo permissions and the following packages:
 
 ```bash
-$ sudo apt-get install debootstrap
+$ sudo apt-get install debootstrap ubuntu-archive-keyring
 ```
 
 On Ubuntu you need sudo permissions and the following packages:
 
 ```bash
-$ sudo apt-get install debian-keyring debian-archive-keyring debootstrap
+$ sudo apt-get install debootstrap
 ```
 
 You also need to be in the docker group to use Docker.
@@ -53,9 +52,9 @@ $ docker login
 
 ## Usage
 
-You first  need to choose which  dist between lenny, squeeze,  wheezy,jessie and
-stretch you want  (jessie will be the  'latest' tag) and you need  to choose you
-user (or organization) name on Docker Hub.
+You first  need to choose  which dist  between precise (12.04),  trusty (14.04),
+xenial (16.04) and  yakkety (16.10) you want (yakkety will  be the 'latest' tag)
+and you need to choose you user (or organization) name on Docker Hub.
 
 Show help.
 
@@ -63,16 +62,16 @@ Show help.
 $ ./build.sh -h
 ```
 
-Build your own Debian image (eg. wheezy).
+Build your own Ubuntu image (eg. trusty).
 
 ```bash
-$ ./build.sh -d wheezy -u rockyluke
+$ ./build.sh -d trusty -u rockyluke
 ```
 
-Build your own Debian image (eg. jessie) and push it on the Docker Hub.
+Build your own Ubuntu image (eg. xenial) and push it on the Docker Hub.
 
 ```bash
-$ ./build.sh -d jessie -u rockyluke -p
+$ ./build.sh -d xenial -u rockyluke -p
 ```
 
 ## Development
@@ -90,7 +89,7 @@ Feel free to contribute on GitHub.
 ```
 
 [license-img]: https://img.shields.io/badge/license-ISC-blue.svg
-[build-img]: https://travis-ci.org/rockyluke/docker-debian.svg?branch=master
-[build-url]: https://travis-ci.org/rockyluke/docker-debian
-[docker-img]: https://img.shields.io/docker/pulls/rockyluke/debian.svg
-[docker-url]: https://registry.hub.docker.com/u/rockyluke/debian
+[build-img]: https://travis-ci.org/rockyluke/docker-ubuntu.svg?branch=master
+[build-url]: https://travis-ci.org/rockyluke/docker-ubuntu
+[docker-img]: https://img.shields.io/docker/pulls/rockyluke/ubuntu.svg
+[docker-url]: https://registry.hub.docker.com/u/rockyluke/ubuntu
