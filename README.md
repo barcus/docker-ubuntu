@@ -29,6 +29,7 @@ Supported tags.
 On Debian you need sudo permissions and the following packages:
 
 ```bash
+# if you build on wheezy please use backports version of debootstrap
 $ sudo apt-get install debootstrap ubuntu-archive-keyring
 ```
 
