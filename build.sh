@@ -204,7 +204,7 @@ EOF
     ${sudo} mkdir -p "${image}/usr/local/share/"
     ${sudo} cp -r ca-certificates "${image}/usr/local/share/"
 
-    # upgrade
+    # upgrade (without output...)
     echo ' * apt-get upgrade'
     ${sudo} chroot "${image}" bash -c \
 	    "export DEBIAN_FRONTEND=noninteractive && \
@@ -215,7 +215,7 @@ EOF
              apt-get dist-upgrade -qq -y && \
              apt-get clean -qq -y && \
              apt-get autoremove -qq -y && \
-             apt-get autoclean -qq -y"
+             apt-get autoclean -qq -y" > /dev/null 2>&1
 
     # unmount
     ${sudo} umount "${image}/dev/pts"
@@ -351,7 +351,7 @@ fi
 # -u / --user
 if [ -z "${user}" ]
 then
-    user='rockyluke'
+    user=${USER}
 fi
 
 # -l / --latest
