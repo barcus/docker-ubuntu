@@ -338,7 +338,7 @@ then
 	    distid='14.04'
 	    ;;
 	xenial|16.04|16.04-lts)
-	    distname='trusty'
+	    distname='xenial'
 	    distid='16.04'
 	    ;;
 	yakkety|16.10)
