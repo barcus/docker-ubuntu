@@ -62,22 +62,33 @@ function docker_debootstrap()
     fi
 
     # clean old image
-    ${sudo} rm -fr "${image}"
+    if [ -d "/tmp/image-${distname}-${arch}" ]
+    then
+	${sudo} rm -fr "${image}"
+    fi
 
     # create minimal debootstrap image
     echo " * debootstrap" 1>&3
-    ${sudo} debootstrap \
-	    --arch="${arch}" \
-	    --include="${include}" \
-	    --exclude="${exclude}" \
-	    --variant=minbase \
-	    "${distname}" \
-	    "${image}" \
-	    "http://${mirror}/ubuntu"
-    if [ ${?} -ne 0 ]
+    if [ ! -f "/usr/share/debootstrap/scripts/${distname}" ] || [ ! -h "/usr/share/debootstrap/scripts/${distname}" ]
     then
-	echo "/!\ There is an issue with debootstrap, please run again with -v (verbose)." 1>&3
+	echo "/!\ File /usr/share/debootstrap/scripts/${distname} is missing." 1>&3
+	echo "1.) did you install backports version of debootstrap ?" 1>&3
+	echo "2.) run sudo ln -s gutsy /usr/share/debootstrap/scripts/${distname}" 1>&3
 	exit 1
+    else
+	${sudo} debootstrap \
+		--arch="${arch}" \
+		--include="${include}" \
+		--exclude="${exclude}" \
+		--variant=minbase \
+		"${distname}" \
+		"${image}" \
+		"http://${mirror}/ubuntu"
+	if [ ${?} -ne 0 ]
+	then
+	    echo "/!\ There is an issue with debootstrap, please run again with -v (verbose)." 1>&3
+	    exit 1
+	fi
     fi
 
     # create /etc/default/locale
