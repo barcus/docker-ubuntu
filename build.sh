@@ -251,9 +251,9 @@ function docker_import()
 {
     echo "-- docker import ubuntu:${distname} (from ${image}.tgz)" 1>&3
     docker import "${image}.tar" "${user}/ubuntu:${distname}"
-    docker run "${user}/ubuntu:${distname}" echo "Successfully build ${user}/ubuntu:${distname}"
+    docker run "${user}/ubuntu:${distname}" echo "Successfully build ${user}/ubuntu:${distname}" 1>&3
     docker tag "${user}/ubuntu:${distname}" "${user}/ubuntu:${distid}"
-    docker run "${user}/ubuntu:${distid}" echo "Successfully build ${user}/ubuntu:${distid}"
+    docker run "${user}/ubuntu:${distid}" echo "Successfully build ${user}/ubuntu:${distid}" 1>&3
 }
 
 # push image to docker hub
